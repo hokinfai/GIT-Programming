@@ -1,0 +1,172 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+
+public class Encoder {
+	public static void main(String args[]) throws IOException {
+		StringBuffer buffer = new StringBuffer();
+		BufferedReader Buf = new BufferedReader(new InputStreamReader(
+				new FileInputStream(args[0])));
+		int nothing;
+		while ((nothing = Buf.read()) != -1) {
+			buffer.append((char) nothing);
+		}
+
+		String input = buffer.toString();
+		Buf.close();
+		ArrayList<Saving> myList = new ArrayList<Saving>();
+		ArrayList<Saving> huffArray = new ArrayList<Saving>();
+		// create a Hash map
+		HashMap<String, String> dict = new HashMap<String, String>();
+
+		HashMap<String, Integer> map = new HashMap<String, Integer>();
+
+		for (int i = 0; i < input.length(); i++) {
+			String value = input.substring(i, i + 1);
+			if (map.get(value) == null) {
+				map.put(value, 1);
+				dict.put(value, "");
+			} else
+				map.put(value, map.get(value) + 1);
+
+		}
+		// sorting
+		for (String key : map.keySet()) {
+			myList.add(new Saving(key, map.get(key)));
+			Collections.sort(myList, new valueCompare());
+			// System.out.println(myList.toString());
+		}
+
+		// establishing the code
+		while (myList.size() != 1) {
+			for (int x = 0; x < myList.get(0).getCharacter().length(); x++) {
+				String value = myList.get(0).getCharacter().substring(x, x + 1);
+
+				dict.put(value, "0" + dict.get(value));
+			}
+			for (int x = 0; x < myList.get(1).getCharacter().length(); x++) {
+				String value = myList.get(1).getCharacter().substring(x, x + 1);
+
+				dict.put(value, "1" + dict.get(value));
+			}
+
+			huffArray.add(new Saving(myList.get(0).getCharacter()
+					+ myList.get(1).getCharacter(), myList.get(0).getValue()
+					+ myList.get(1).getValue()));
+
+			myList.remove(myList.get(0));
+			myList.remove(myList.get(0));
+
+			myList.add(new Saving(huffArray.get(0).getCharacter(), huffArray
+					.get(0).getValue()));
+
+			huffArray.remove(huffArray.get(0));
+
+			Collections.sort(myList, new valueCompare());
+		}
+
+		//System.out.println(dict.toString());
+
+		// print out
+		BufferedWriter dictWriter = new BufferedWriter(new FileWriter(args[2]));
+		dictWriter.write(dict.entrySet().toString());
+		dictWriter.close();
+		// convert the file
+		StringBuilder finalString1 = new StringBuilder("");
+		StringBuilder finalString2 = new StringBuilder("");
+		StringBuilder finalString3 = new StringBuilder("");
+
+//		long start = System.currentTimeMillis();
+//		System.out.println(start);
+		int allLeng = input.length();
+		int part = allLeng / 3;
+		int firstPart = part;
+		int secondPart = part * 2;
+		int thirdPart = allLeng;
+		int i = 0;
+		for (i = 0; i < firstPart; i++) {
+			String value = input.substring(i, i + 1);
+			finalString1.append(dict.get(value));
+
+		}
+		for (i = firstPart; i < secondPart; i++) {
+			String value = input.substring(i, i + 1);
+			finalString2.append(dict.get(value));
+
+		}
+
+		for (i = secondPart; i < thirdPart; i++) {
+			String value = input.substring(i, i + 1);
+			finalString3.append(dict.get(value));
+
+		}
+
+		
+		BufferedWriter fileWriter = new BufferedWriter(new FileWriter(args[1]));
+		
+		fileWriter.write(finalString1.toString());
+		fileWriter.write(finalString2.toString());
+		fileWriter.write(finalString3.toString());
+	
+		fileWriter.close();
+
+	}
+}
+
+/*
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * */
+
+class valueCompare implements Comparator<Saving> {
+	@Override
+	public int compare(Saving s1, Saving s2) {
+		if (s1.getValue() < s2.getValue()) {
+			return -1;
+		} else
+			return 1;
+	}
+
+}
+
+class Saving {
+	String c;
+	int times;
+
+	public Saving(String character, int times) {
+		this.c = character;
+		this.times = times;
+	}
+
+	public String getCharacter() {
+		return c;
+	}
+
+	public int getValue() {
+		return times;
+	}
+
+	public String toString() {
+		return c + times;
+	}
+}
